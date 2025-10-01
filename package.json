@@ -1,0 +1,60 @@
+{
+  "name": "chrome-devtools-mcp-bridge",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Bridge TCP <-> chrome-devtools-mcp (auto-launch Chrome outside sandbox) with server/client subcommands.",
+  "type": "commonjs",
+  "bin": {
+    "chrome-devtools-mcp-bridge": "./bin/mcp-bridge.js"
+  },
+  "scripts": {
+    "host": "node ./bin/mcp-bridge.js host",
+    "connect": "node ./bin/mcp-bridge.js connect"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT",
+  "author": "Kira",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "chrome",
+    "devtools",
+    "chrome-devtools",
+    "chrome-devtools-mcp",
+    "bridge",
+    "proxy",
+    "stdio",
+    "tcp",
+    "codex",
+    "wsl",
+    "windows",
+    "ubuntu",
+    "sandbox"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JMY1993/chrome-devtools-mcp-bridge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JMY1993/chrome-devtools-mcp-bridge/issues"
+  },
+  "homepage": "https://github.com/JMY1993/chrome-devtools-mcp-bridge#readme",
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "README.zh-CN.md",
+    "README.ja.md",
+    "README.ko.md",
+    "README.fr.md",
+    "README.ar.md",
+    "README.ru.md",
+    "README.es.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
