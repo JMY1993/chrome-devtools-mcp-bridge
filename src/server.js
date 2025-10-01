@@ -38,6 +38,7 @@ function parse(argv) {
     chromeBin: args.chromeBin || d.chromeBin,
     mcpCmd: args.mcpCmd || d.mcpCmd,
     mcpArgs: (args.mcpArgs ? args.mcpArgs.split(" ") : d.mcpArgs),
+    forwardArgs: args._ || [],
     daemon: !!args.daemon,
     logFile: args.logFile || process.env.MCP_BRIDGE_LOG || "",
     pidFile: args.pidFile || process.env.MCP_BRIDGE_PID || ""
@@ -77,6 +78,11 @@ function resolveChrome(chromeBin) {
   return "google-chrome";
 }
 
+function hasFlag(args, name) {
+  const prefix = `${name}=`;
+  return args.some((arg) => arg === name || arg.startsWith(prefix));
+}
+
 async function launchChrome(host, noSandbox, chromeBin) {
   const port = await findFreePort(host);
   const userDataDir = mkTempDir("chrome-mcp-bridge-ud-");
@@ -104,6 +110,10 @@ async function launchChrome(host, noSandbox, chromeBin) {
 module.exports = function main(argv) {
   const cfg = parse(argv || process.argv);
 
+  const passthrough = [...cfg.mcpArgs, ...cfg.forwardArgs];
+  const userProvidedTarget =
+    hasFlag(passthrough, "--connect-url") || hasFlag(passthrough, "--isolated");
+
   // Optional daemonize
   if (cfg.daemon && process.env.MCP_BRIDGE_DAEMON_CHILD !== "1") {
     try {
@@ -118,6 +128,7 @@ module.exports = function main(argv) {
       if (cfg.chromeBin) childArgv.push("--chromeBin", cfg.chromeBin);
       if (cfg.mcpCmd) childArgv.push("--mcpCmd", cfg.mcpCmd);
       if (cfg.mcpArgs && cfg.mcpArgs.length) childArgv.push("--mcpArgs", cfg.mcpArgs.join(" "));
+      if (cfg.forwardArgs && cfg.forwardArgs.length) childArgv.push(...cfg.forwardArgs);
 
       const outFd = cfg.logFile ? fs.openSync(cfg.logFile, "a") : "ignore";
       const errFd = outFd;
@@ -139,21 +150,24 @@ module.exports = function main(argv) {
   }
 
   const server = net.createServer(async (socket) => {
+    const childArgs = [...cfg.mcpArgs, ...cfg.forwardArgs];
     let cleanupChrome = null;
     let connectUrl = null;
-    try {
-      const { url, cleanup } = await launchChrome(cfg.host, cfg.noSandbox, cfg.chromeBin);
-      connectUrl = url;
-      cleanupChrome = cleanup;
-    } catch (e) {
-      console.error("[mcp-bridge] Failed to launch Chrome:", e && e.message ? e.message : e);
-    }
 
-    const childArgs = [...cfg.mcpArgs];
-    if (connectUrl) {
-      childArgs.push("--connect-url", connectUrl);
-    } else {
-      childArgs.push("--isolated");
+    if (!userProvidedTarget) {
+      try {
+        const { url, cleanup } = await launchChrome(cfg.host, cfg.noSandbox, cfg.chromeBin);
+        connectUrl = url;
+        cleanupChrome = cleanup;
+      } catch (e) {
+        console.error("[mcp-bridge] Failed to launch Chrome:", e && e.message ? e.message : e);
+      }
+
+      if (connectUrl) {
+        childArgs.push("--connect-url", connectUrl);
+      } else {
+        childArgs.push("--isolated");
+      }
     }
 
     const child = spawn(cfg.mcpCmd, childArgs, { stdio: ["pipe", "pipe", "inherit"] });

@@ -9,11 +9,25 @@ function parseArgv(argv, spec) {
   spec.forEach((s) => (s.alias || []).forEach((a) => aliasTo.set(a, s.name)));
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
+    if (a === "--") {
+      out._.push(...argv.slice(i + 1));
+      break;
+    }
     if (a.startsWith("--")) {
       const key = a.slice(2);
       const name = map.has(key) ? key : aliasTo.get(key);
       const def = name ? map.get(name) : null;
-      if (!def) continue;
+      if (!def) {
+        out._.push(a);
+        if (!a.includes("=")) {
+          const v = argv[i + 1];
+          if (v != null && !v.startsWith("-")) {
+            out._.push(v);
+            i++;
+          }
+        }
+        continue;
+      }
       if (def.type === "boolean") {
         out[name] = true;
       } else {
@@ -26,7 +40,15 @@ function parseArgv(argv, spec) {
       const key = a.slice(1);
       const name = aliasTo.get(key);
       const def = name ? map.get(name) : null;
-      if (!def) continue;
+      if (!def) {
+        out._.push(a);
+        const v = argv[i + 1];
+        if (v != null && !v.startsWith("-")) {
+          out._.push(v);
+          i++;
+        }
+        continue;
+      }
       if (def.type === "boolean") {
         out[name] = true;
       } else {

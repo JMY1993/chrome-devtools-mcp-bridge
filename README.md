@@ -44,7 +44,12 @@ Env/flags
 - --no-sandbox: launch Chrome with --no-sandbox (dev only)
 - --chrome-bin <path>: explicit Chrome executable
 - --mcp-cmd <cmd>: override MCP launcher (default: npx)
-- --mcp-args "...": extra args (default pulls chrome-devtools-mcp via npx)
+- --mcp-args "...": extra args (default pulls chrome-devtools-mcp via npx). Native
+  chrome-devtools-mcp flags like `--isolated` / `--connect-url=...` pass through
+  unchanged, so you can opt out of the auto-launched Chrome when needed. You can
+  also tack on any additional chrome-devtools-mcp flags after the bridge options
+  (e.g., ``chrome-devtools-mcp-bridge host -- --isolated --foo=bar``) and they'll
+  be forwarded verbatim.
 
 WSL ↔ Windows
 If host/port route correctly between WSL and Windows, this can bridge WSL MCP to Windows Chrome. On modern WSL2, Windows loopback is mirrored so localhost often works; otherwise, use the Windows host IP (ipconfig.exe) and allow the port in the Windows firewall.
